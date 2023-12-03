@@ -18,7 +18,11 @@ CREATE DATABASE if not exists mvan10;
 show DATABASES;
 use mvan10;
 DROP TABLE IF EXISTS all_borough_covid;
-CREATE EXTERNAL TABLE IF NOT EXISTS all_borough_covid(days DATE, borough STRING, Admit_0_4 DOUBLE, Admit_5_12 DOUBLE, Admit_13_17 DOUBLE, Admit_18_24 DOUBLE, Admit_25_34 DOUBLE, Admit_35_44 DOUBLE, Admit_45_54 DOUBLE, Admit_55_64 DOUBLE, Admit_65_74 DOUBLE, Admit_75 DOUBLE, Admit_All_ages DOUBLE, Visit_0_4 DOUBLE, Visit_5_12 DOUBLE, Visit_13_17 DOUBLE, Visit_18_24 DOUBLE, Visit_25_34 DOUBLE, Visit_35_44 DOUBLE, Visit_45_54 DOUBLE, Visit_55_64 DOUBLE, Visit_65_74 DOUBLE, Visit_75 DOUBLE, Visit_All_ages DOUBLE) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/mvan10/Project/covid' TBLPROPERTIES ('skip.header.line.count'='1');
+CREATE EXTERNAL TABLE IF NOT EXISTS all_borough_covid(days DATE, borough STRING, Admit_0_4 DOUBLE, Admit_5_12 DOUBLE, Admit_13_17 DOUBLE, Admit_18_24 DOUBLE, Admit_25_34 DOUBLE, Admit_35_44 DOUBLE,
+Admit_45_54 DOUBLE, Admit_55_64 DOUBLE, Admit_65_74 DOUBLE, Admit_75 DOUBLE, Admit_All_ages DOUBLE, Visit_0_4 DOUBLE, Visit_5_12 DOUBLE, Visit_13_17 DOUBLE, Visit_18_24 DOUBLE, Visit_25_34 DOUBLE, 
+Visit_35_44 DOUBLE, Visit_45_54 DOUBLE, Visit_55_64 DOUBLE, Visit_65_74 DOUBLE, Visit_75 DOUBLE, Visit_All_ages DOUBLE) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION 
+'/user/mvan10/Project/covid' TBLPROPERTIES ('skip.header.line.count'='1');
+
 describe all_borough_covid;
 select * from all_borough_covid LIMIT 3;
 DROP TABLE IF EXISTS raw_calls;
@@ -33,3 +37,9 @@ CREATE TABLE reduced_nypd_calls
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
 STORED AS TEXTFILE LOCATION '/user/mvan10/Project/export_v2'
 AS SELECT * FROM nypd_calls WHERE create_date >= 2019 AND create_date <= 2022 AND cip_jobs == 'Non CIP' AND typ_desc LIKE '%AMBULANCE%'
+
+hdfs dfs -get /home/mvan10/Project/export/000000_0 nypd_calls.txt
+hdfs dfs -getmerge /user/mvan10/Project/export_v2/0000* combine.txt
+
+scp mvan10@129.146.90.117:/home/mvan10/combine.txt .
+scp mvan10@129.146.90.117:/home/mvan10/nypd_calls.csv .
