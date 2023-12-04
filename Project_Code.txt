@@ -1,8 +1,6 @@
 scp covid-like-illness-by-boro.csv mvan10@129.146.90.117: 
-Compress the NYPD_Calls_for_Service__Historic_.csv with file explorer or any other compression tool
-scp NYPD_Calls_for_Service__Historic_.zip mvan10@129.146.90.117:
-ssh
-unzip NYPD_Calls_for_Service__Historic_.zip
+scp NYPD_Calls_for_Service__Historic_.csv mvan10@129.146.90.117:
+ssh mvan10@129.146.90.117
 ls -al
 hdfs dfs -mkdir Project
 hdfs dfs -mkdir Project/covid
@@ -13,33 +11,37 @@ hdfs dfs -put NYPD_Calls_for_Service__Historic_.csv Project/nypd/
 hdfs dfs -ls
 hdfs dfs -ls Project/covid
 hdfs dfs -ls Project/nypd
-beeline 
-CREATE DATABASE if not exists mvan10;
+
+-- CODE BELOW IS PUT IN BEELINE
+CREATE DATABASE IF NOT EXISTS mvan10;
 show DATABASES;
 use mvan10;
+
 DROP TABLE IF EXISTS all_borough_covid;
-CREATE EXTERNAL TABLE IF NOT EXISTS all_borough_covid(days DATE, borough STRING, Admit_0_4 DOUBLE, Admit_5_12 DOUBLE, Admit_13_17 DOUBLE, Admit_18_24 DOUBLE, Admit_25_34 DOUBLE, Admit_35_44 DOUBLE,
-Admit_45_54 DOUBLE, Admit_55_64 DOUBLE, Admit_65_74 DOUBLE, Admit_75 DOUBLE, Admit_All_ages DOUBLE, Visit_0_4 DOUBLE, Visit_5_12 DOUBLE, Visit_13_17 DOUBLE, Visit_18_24 DOUBLE, Visit_25_34 DOUBLE, 
-Visit_35_44 DOUBLE, Visit_45_54 DOUBLE, Visit_55_64 DOUBLE, Visit_65_74 DOUBLE, Visit_75 DOUBLE, Visit_All_ages DOUBLE) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION 
-'/user/mvan10/Project/covid' TBLPROPERTIES ('skip.header.line.count'='1');
+CREATE EXTERNAL TABLE IF NOT EXISTS all_borough_covid(days DATE, borough STRING, Admit_0_4 DOUBLE, Admit_5_12 DOUBLE, Admit_13_17 DOUBLE, Admit_18_24 DOUBLE, Admit_25_34 DOUBLE, Admit_35_44 DOUBLE,Admit_45_54 DOUBLE, Admit_55_64 DOUBLE, Admit_65_74 DOUBLE, Admit_75 DOUBLE, Admit_All_ages DOUBLE, Visit_0_4 DOUBLE, Visit_5_12 DOUBLE, Visit_13_17 DOUBLE, Visit_18_24 DOUBLE, Visit_25_34 DOUBLE, Visit_35_44 DOUBLE, Visit_45_54 DOUBLE, Visit_55_64 DOUBLE, Visit_65_74 DOUBLE, Visit_75 DOUBLE, Visit_All_ages DOUBLE) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/mvan10/Project/covid' TBLPROPERTIES ('skip.header.line.count'='1');
 
-describe all_borough_covid;
 select * from all_borough_covid LIMIT 3;
-DROP TABLE IF EXISTS raw_calls;
-CREATE EXTERNAL TABLE IF NOT EXISTS raw_calls(objectid INT, cad_event_id INT, create_date STRING, incident_date STRING, incident_time STRING, nypd_pct_cd INT, boro_nm STRING, patrl_boro_nm STRING, geo_cd_x INT, geo_cd_y INT, radio_code STRING, typ_desc STRING, cip_jobs STRING, add_ts STRING, disp_ts STRING, arrivd_ts STRING, closng_ts STRING, latitude DOUBLE, longitude DOUBLE, point STRING) 
-ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/mvan10/Project/nypd' TBLPROPERTIES ('skip.header.line.count'='1');
-create table borough_data as select days, borough, Admit_0_4, Admit_5_12, Admit_13_17, Admit_18_24, Admit_25_34, Admit_35_44, Admit_45_54, Admit_55_64, Admit_65_74, Admit_75 from all_borough_covid ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/mvan10/Project/boro_data';
-CREATE TABLE IF NOT EXISTS nypd_calls(objectid INT, create_date DATE, boro_nm STRING, radio_code STRING, typ_desc STRING, cip_jobs STRING, add_ts TIMESTAMP, latitude DOUBLE, longitude DOUBLE)
-ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
-STORED AS TEXTFILE LOCATION '/user/mvan10/Project/export';
-FROM raw_calls INSERT OVERWRITE TABLE nypd_calls SELECT cast(from_unixtime(unix_timestamp(create_date,'MM/dd/yyyy')) AS DATE), boro_nm, radio_code, typ_desc, cip_jobs, cast(from_unixtime(unix_timestamp(add_ts,'MM/dd/yyyy hh:mm:ss aa')) AS TIMESTAMP), latitude, longitude;
-CREATE TABLE reduced_nypd_calls 
-ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
-STORED AS TEXTFILE LOCATION '/user/mvan10/Project/export_v2'
-AS SELECT * FROM nypd_calls WHERE create_date >= 2019 AND create_date <= 2022 AND cip_jobs == 'Non CIP' AND typ_desc LIKE '%AMBULANCE%'
 
-hdfs dfs -get /home/mvan10/Project/export/000000_0 nypd_calls.txt
+DROP TABLE IF EXISTS raw_calls;
+CREATE EXTERNAL TABLE IF NOT EXISTS raw_calls(objectid INT, cad_event_id INT, create_date STRING, incident_date STRING, incident_time STRING, nypd_pct_cd INT, boro_nm STRING, patrl_boro_nm STRING, geo_cd_x INT, geo_cd_y INT, radio_code STRING, typ_desc STRING, cip_jobs STRING, add_ts STRING, disp_ts STRING, arrivd_ts STRING, closng_ts STRING, latitude DOUBLE, longitude DOUBLE, point STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/mvan10/Project/nypd' TBLPROPERTIES ('skip.header.line.count'='1');
+
+select * from raw_calls LIMIT 3;
+
+DROP TABLE IF EXISTS borough_data;
+CREATE TABLE borough_data AS SELECT days, borough, Admit_0_4, Admit_5_12, Admit_13_17, Admit_18_24, Admit_25_34, Admit_35_44, Admit_45_54, Admit_55_64, Admit_65_74, Admit_75 
+FROM all_borough_covid ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/mvan10/Project/boro_data';
+
+DROP TABLE IF EXISTS nypd_calls;
+CREATE TABLE IF NOT EXISTS nypd_calls(objectid INT, create_date DATE, boro_nm STRING, radio_code STRING, typ_desc STRING, cip_jobs STRING, add_ts TIMESTAMP, latitude DOUBLE, longitude DOUBLE) ROW FORMAT DELIMITED FIELDS TERMINATED BY ','STORED AS TEXTFILE LOCATION '/user/mvan10/Project/export';
+
+FROM raw_calls INSERT OVERWRITE TABLE nypd_calls 
+SELECT cast(from_unixtime(unix_timestamp(create_date,'MM/dd/yyyy')) AS DATE), boro_nm, radio_code, typ_desc, cip_jobs, cast(from_unixtime(unix_timestamp(add_ts,'MM/dd/yyyy hh:mm:ss aa')) AS TIMESTAMP), latitude, longitude;
+
+CREATE TABLE reduced_nypd_calls ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/mvan10/Project/export_v2' AS SELECT * FROM nypd_calls WHERE create_date >= 2019 AND create_date <= 2022 AND cip_jobs == 'Non CIP' AND typ_desc LIKE '%AMBULANCE%';
+
+-- DONE IN LOCAL COMMAND LINE
+hdfs dfs -get /home/mvan10/Project/boro_data/000000_0 borough_data.txt
 hdfs dfs -getmerge /user/mvan10/Project/export_v2/0000* combine.txt
 
 scp mvan10@129.146.90.117:/home/mvan10/combine.txt .
-scp mvan10@129.146.90.117:/home/mvan10/nypd_calls.csv .
+scp mvan10@129.146.90.117:/home/mvan10/borough_data.txt .
