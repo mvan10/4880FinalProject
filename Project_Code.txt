@@ -5,7 +5,7 @@ ls -al
 hdfs dfs -mkdir Project
 hdfs dfs -mkdir Project/covid
 hdfs dfs -mkdir Project/nypd
-hdfs dfs -ls
+hdfs dfs -ls Project
 hdfs dfs -put covid-like-illness-by-boro.csv Project/covid/
 hdfs dfs -put NYPD_Calls_for_Service__Historic_.csv Project/nypd/
 hdfs dfs -ls
@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS nypd_calls(objectid INT, create_date DATE, boro_nm ST
 FROM raw_calls INSERT OVERWRITE TABLE nypd_calls 
 SELECT cast(from_unixtime(unix_timestamp(create_date,'MM/dd/yyyy')) AS DATE), boro_nm, radio_code, typ_desc, cip_jobs, cast(from_unixtime(unix_timestamp(add_ts,'MM/dd/yyyy hh:mm:ss aa')) AS TIMESTAMP), latitude, longitude;
 
+DROP TABLE IF EXISTS reduced_nypd_calls;
 CREATE TABLE reduced_nypd_calls ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/mvan10/Project/export_v2' AS SELECT * FROM nypd_calls WHERE create_date >= 2019 AND create_date <= 2022 AND cip_jobs == 'Non CIP' AND typ_desc LIKE '%AMBULANCE%';
 
 -- DONE IN LOCAL COMMAND LINE
