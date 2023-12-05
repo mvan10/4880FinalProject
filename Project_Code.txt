@@ -28,17 +28,20 @@ CREATE EXTERNAL TABLE IF NOT EXISTS raw_calls(objectid INT, cad_event_id INT, cr
 select * from raw_calls LIMIT 3;
 
 DROP TABLE IF EXISTS borough_data;
-CREATE EXTERNAL TABLE borough_data AS SELECT days, borough, Admit_0_4, Admit_5_12, Admit_13_17, Admit_18_24, Admit_25_34, Admit_35_44, Admit_45_54, Admit_55_64, Admit_65_74, Admit_75 
-FROM all_borough_covid ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/mvan10/Project/boro_data';
+CREATE TABLE borough_data ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/mvan10/Project/boro_data' AS SELECT days, borough, Admit_0_4, Admit_5_12, Admit_13_17, Admit_18_24, Admit_25_34, Admit_35_44, Admit_45_54, Admit_55_64, Admit_65_74, Admit_75 FROM all_borough_covid;
 
 DROP TABLE IF EXISTS nypd_calls;
-CREATE EXTERNAL TABLE IF NOT EXISTS nypd_calls(objectid INT, create_date DATE, boro_nm STRING, radio_code STRING, typ_desc STRING, cip_jobs STRING, add_ts TIMESTAMP, latitude DOUBLE, longitude DOUBLE) ROW FORMAT DELIMITED FIELDS TERMINATED BY ','STORED AS TEXTFILE LOCATION '/user/mvan10/Project/export';
+CREATE TABLE IF NOT EXISTS nypd_calls(objectid INT, create_date DATE, boro_nm STRING, radio_code STRING, typ_desc STRING, cip_jobs STRING, add_ts TIMESTAMP, latitude DOUBLE, longitude DOUBLE) ROW FORMAT DELIMITED FIELDS TERMINATED BY ','STORED AS TEXTFILE LOCATION '/user/mvan10/Project/export';
 
 FROM raw_calls INSERT OVERWRITE TABLE nypd_calls 
 SELECT cast(from_unixtime(unix_timestamp(create_date,'MM/dd/yyyy')) AS DATE), boro_nm, radio_code, typ_desc, cip_jobs, cast(from_unixtime(unix_timestamp(add_ts,'MM/dd/yyyy hh:mm:ss aa')) AS TIMESTAMP), latitude, longitude;
 
 DROP TABLE IF EXISTS reduced_nypd_calls;
-CREATE EXTERNAL TABLE reduced_nypd_calls ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE LOCATION '/user/mvan10/Project/export_v2' AS SELECT * FROM nypd_calls WHERE create_date >= 2019 AND create_date <= 2022 AND cip_jobs == 'Non CIP' AND typ_desc LIKE '%AMBULANCE%';
+CREATE TABLE reduced_nypd_calls 
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+STORED AS TEXTFILE LOCATION '/user/mvan10/Project/export_v2'
+AS SELECT * FROM nypd_calls WHERE create_date >= 2019 AND create_date <= 2022 AND cip_jobs == 'Non CIP' AND typ_desc LIKE '%AMBULANCE%';
+
 
 -- DONE IN LOCAL COMMAND LINE
 hdfs dfs -get /home/mvan10/Project/boro_data/000000_0 borough_data.txt
