@@ -40,7 +40,7 @@ DROP TABLE IF EXISTS reduced_nypd_calls;
 CREATE TABLE reduced_nypd_calls 
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
 STORED AS TEXTFILE LOCATION '/user/mvan10/Project/export_v2'
-AS SELECT * FROM nypd_calls WHERE create_date >= 2019 AND create_date <= 2022 AND cip_jobs == 'Non CIP' AND typ_desc LIKE '%AMBULANCE%';
+AS SELECT * FROM nypd_calls WHERE create_date >= 2020 AND create_date <= 2022 AND cip_jobs == 'Non CIP' AND typ_desc LIKE '%AMBULANCE%';
 
 
 -- DONE IN LOCAL COMMAND LINE
