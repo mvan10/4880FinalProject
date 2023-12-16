@@ -1,4 +1,4 @@
->> Create first GitBash Terminal
+>> Create First GitBash Terminal
 
 scp covid-like-illness-by-boro.csv jtam2@129.146.90.117:
 
@@ -76,7 +76,7 @@ CREATE TABLE reduced_nypd_calls ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ST
 
 select * from reduced_nypd_calls LIMIT 3;
 
->> Return to first terminal
+>> Return to the First Git Bash Terminal
 
 hdfs dfs -ls /user/jtam2/Project/boro_data/
 
@@ -91,3 +91,49 @@ hdfs dfs -getmerge /user/jtam2/Project/export_v2/0000* combine.txt
 scp jtam2@129.146.90.117:/home/jtam2/combine.txt .
 
 scp jtam2@129.146.90.117:/home/jtam2/borough_data.txt .
+
+>> Return to the Second GitBash Terminal
+
+INSERT OVERWRITE DIRECTORY '/user/jtam2/Project/export_2020' ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE Select month, avg(count) as monthly_avg from(SELECT MONTH(create_date) AS month, DAY(create_date) AS day, count(typ_desc) AS count FROM Nypd_calls Where year(create_date) = '2020' and typ_desc like '%AMBULANCE%' GROUP BY MONTH(create_date), DAY(create_date) Order by month) temp group by month order by month;
+
+Select month, avg(count) as monthly_avg from(SELECT MONTH(create_date) AS month, DAY(create_date) AS day, count(typ_desc) AS count FROM Nypd_calls Where year(create_date) = '2020' and typ_desc like '%AMBULANCE%' GROUP BY MONTH(create_date), DAY(create_date) Order by month) temp group by month order by month;
+
+INSERT OVERWRITE DIRECTORY '/user/jtam2/Project/export_2021' ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE Select month, avg(count) as monthly_avg from(SELECT MONTH(create_date) AS month, DAY(create_date) AS day, count(typ_desc) AS count FROM Nypd_calls Where year(create_date) = '2021' and typ_desc like '%AMBULANCE%' GROUP BY MONTH(create_date), DAY(create_date) Order by month) temp group by month order by month;
+
+Select month, avg(count) as monthly_avg from(SELECT MONTH(create_date) AS month, DAY(create_date) AS day, count(typ_desc) AS count FROM Nypd_calls Where year(create_date) = '2021' and typ_desc like '%AMBULANCE%' GROUP BY MONTH(create_date), DAY(create_date) Order by month) temp group by month order by month;
+
+INSERT OVERWRITE DIRECTORY '/user/jtam2/Project/export_2020_covid' ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE Select month, avg(sum) as monthly_avg from( SELECT MONTH(days) AS month, DAY(days) AS day, sum(admit_all_ages) AS sum FROM All_borough_covid Where year(days) = '2020' GROUP BY days Order by month,days) temp group by month order by month;
+
+Select month, avg(sum) as monthly_avg from( SELECT MONTH(days) AS month, DAY(days) AS day, sum(admit_all_ages) AS sum FROM All_borough_covid Where year(days) = '2020' GROUP BY days Order by month,days) temp group by month order by month;
+
+INSERT OVERWRITE DIRECTORY '/user/jtam2/Project/export_2021_covid' ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE Select month, avg(sum) as monthly_avg from(SELECT MONTH(days) AS month, DAY(days) AS day, sum(admit_all_ages) AS sum FROM All_borough_covid Where year(days) = '2021' GROUP BY days Order by month,days) temp group by month order by month;
+
+Select month, avg(sum) as monthly_avg from(SELECT MONTH(days) AS month, DAY(days) AS day, sum(admit_all_ages) AS sum FROM All_borough_covid Where year(days) = '2021' GROUP BY days Order by month,days) temp group by month order by month;
+
+>> Return to the First GitBash Terminal
+
+hdfs dfs -ls /user/jtam2/Project/export_2020/
+
+hdfs dfs -ls /user/jtam2/Project/export_2021/
+
+hdfs dfs -ls /user/jtam2/Project/export_2020_covid/
+
+hdfs dfs -ls /user/jtam2/Project/export_2021_covid/
+
+hdfs dfs -get /user/jtam2/Project/export_2020/000000_0 monthly_Avg_2020.txt
+
+hdfs dfs -get /user/jtam2/Project/export_2021/000000_0 monthly_Avg_2021.txt
+
+hdfs dfs -get /user/jtam2/Project/export_2020_covid/000000_0 monthly_Avg_Covid_2020.txt
+
+hdfs dfs -get /user/jtam2/Project/export_2021_covid/000000_0 monthly_Avg_Covid_2021.txt
+
+>> Open Third GitBash Terminal
+
+scp jtam2@129.146.90.117:/home/jtam2/monthly_Avg_2020.txt .
+
+scp jtam2@129.146.90.117:/home/jtam2/monthly_Avg_2021.txt .
+
+scp jtam2@129.146.90.117:/home/jtam2/monthly_Avg_Covid_2020.txt .
+
+scp jtam2@129.146.90.117:/home/jtam2/monthly_Avg_Covid_2021.txt .
